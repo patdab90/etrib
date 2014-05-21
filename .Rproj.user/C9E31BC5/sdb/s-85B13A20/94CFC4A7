@@ -1,0 +1,22 @@
+{
+    "contents" : "",
+    "created" : 1400553184680.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "94CFC4A7",
+    "lastKnownWriteTime" : 25896178893717505,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "alts",
+        "contentUrl" : "content?title=alts&file=50a843f92e76425d83574f451310fde7.htm",
+        "displayedObservations" : "5",
+        "displayedVariables" : 7,
+        "totalObservations" : "5",
+        "variables" : "5"
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}
