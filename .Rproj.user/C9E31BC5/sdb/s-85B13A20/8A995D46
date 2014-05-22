@@ -1,12 +1,12 @@
 {
-    "contents" : "library(ROI.plugin.glpk)\nlibrary(ROI)\nsolvers <- ROI_installed_solvers()\nif (!is.na(solvers['symphony'])) {\n  .solver <<- 'symphony'\n} else if (!is.na(solvers['glpk'])) {\n  .solver <<- 'glpk'\n} else {\n  stop(\"No ROI Symphony or GLPK plugin installed\")\n}\nsource('etrib.R')\n\n#warianty\nalts <- read.table(file=\"alts.csv\", sep=\",\", header=TRUE)\nrownames(alts) = alts[,1]\nalts <- alts[,2:ncol(alts)]\n\n#granice klas\nprofs <- read.table(file=\"profs.csv\", sep=\",\", header=FALSE)\nrownames(profs) = profs[,1]\nprofs <- profs[,2:ncol(profs)]\ncolnames(profs) <- colnames(alts)\n\n#przykładowe progi\nthresholds <- matrix(c(\n  0, 0.01, 0, 0.02, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 2, 0, FALSE),ncol=5, byrow=TRUE)\n\n## przykładowe przdziały do klas\nassigs1 <- matrix(c(\n  1, 1,\n  5, 2),  , ncol=2, byrow=TRUE)\n  \nmessage(\"--- starting tests, iteration 1\")\n\netrib.init(alts, profs, assigs1, th=thresholds)\n",
+    "contents" : "library(ROI.plugin.glpk)\nlibrary(ROI)\nsolvers <- ROI_installed_solvers()\nif (!is.na(solvers['symphony'])) {\n  .solver <<- 'symphony'\n} else if (!is.na(solvers['glpk'])) {\n  .solver <<- 'glpk'\n} else {\n  stop(\"No ROI Symphony or GLPK plugin installed\")\n}\nsource('etrib.R')\n\n#warianty\nalts <- read.table(file=\"alts.csv\", sep=\",\", header=TRUE)\nrownames(alts) = alts[,1]\nalts <- alts[,2:ncol(alts)]\n\n#granice klas\nprofs <- read.table(file=\"profs.csv\", sep=\",\", header=FALSE)\nrownames(profs) = profs[,1]\nprofs <- profs[,2:ncol(profs)]\ncolnames(profs) <- colnames(alts)\n#przykładowe progi\nthresholds <- matrix(c(\n  0, 0.01, 0, 0.02, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 1.9, 0, FALSE,\n  0, 0, 2, 0, FALSE),ncol=5, byrow=TRUE)\n\n## przykładowe przdziały do klas\nassigs1 <- matrix(c(\n  1, 1,\n  5, 2),  , ncol=2, byrow=TRUE)\n  \nmessage(\"--- starting tests, iteration 1\")\n\netri <- etrib.init(alts, profs, assigs1, th=thresholds)\netri\n",
     "created" : 1400454936454.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2344696348",
+    "hash" : "1145096897",
     "id" : "8A995D46",
-    "lastKnownWriteTime" : 1400559726,
+    "lastKnownWriteTime" : 1400726064,
     "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/main.R",
     "project_path" : "main.R",
     "properties" : {

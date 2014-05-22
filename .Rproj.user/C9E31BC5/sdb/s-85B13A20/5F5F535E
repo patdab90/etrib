@@ -1,0 +1,17 @@
+{
+    "contents" : "etriutils.addVariables <- function(constr, names){\n  ## \n  w <- matrix(0, ncol=length(names), nrow=nrow(constr))\n  colnames(w) <- names\n  constr <- cbind(constr, w)\n  return(constr)\n}\n\netriutils.getVariablesCount <- function(constr){\n  ## \n  return(ncol(constr))\n}",
+    "created" : 1400720564139.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3548406980",
+    "id" : "5F5F535E",
+    "lastKnownWriteTime" : 1400723818,
+    "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/etriutils.R",
+    "project_path" : "etriutils.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

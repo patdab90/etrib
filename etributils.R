@@ -1,3 +1,8 @@
+createBorderProfiles <- function(prof, assig){
+  ##TODO
+  return(prof)
+}
+
 combineConstraintsMatrix <- function(...) {
   allConst = list(...)
   

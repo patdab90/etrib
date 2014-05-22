@@ -20,7 +20,6 @@ profs <- read.table(file="profs.csv", sep=",", header=FALSE)
 rownames(profs) = profs[,1]
 profs <- profs[,2:ncol(profs)]
 colnames(profs) <- colnames(alts)
-
 #przykładowe progi
 thresholds <- matrix(c(
   0, 0.01, 0, 0.02, FALSE,
@@ -36,4 +35,5 @@ assigs1 <- matrix(c(
   
 message("--- starting tests, iteration 1")
 
-etrib.init(alts, profs, assigs1, th=thresholds)
+etri <- etrib.init(alts, profs, assigs1, th=thresholds)
+etri
