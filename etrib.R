@@ -30,6 +30,8 @@ buildBaseModel <- function(etrib, performances, profiles, assignments, th) {
   etrib <- createEpsilonConstraint(etrib)
   etrib <- createB1Constraint(etrib, nCrit)
   etrib <- createB2Constraint(etrib, nCrit, nCats)
+  etrib <- createB4Constraint(etrib)
+  etrib <- createB5Constraint(etrib, nCrit)
   
   ##allConst <- combineConstraintsMatrix(ec)
   ##colnames(allConst$lhs) <- getColNames(nAlts, nCrit, nAssignments, nCats)
@@ -93,5 +95,40 @@ createB2Constraint <- function(etrib, nCrit, nProf) {
     etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B2")))
   }
   
+  return(etrib)
+}
+
+createB4Constraint <- function(etrib){
+  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, c("L"))
+  
+  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
+  lhs[,"L"] <- 1
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B4")))
+  etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B4")))
+  
+  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
+  lhs[,"L"] <- 1
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0.5, ncol=1, nrow=1, dimnames=list("B4")))
+  etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B4")))
+  return(etrib)
+}
+
+createB5Constraint <- function(etrib, nCrit){
+  for(j in 1:nCrit){
+    name <- paste0("w",j)
+    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
+    lhs[,name] <- 1
+    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list("B5")))
+    etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B5")))
+    
+    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
+    lhs[,name] <- 1
+    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B5")))
+    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B5")))
+  }
   return(etrib)
 }
