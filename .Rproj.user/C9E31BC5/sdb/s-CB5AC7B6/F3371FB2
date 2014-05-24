@@ -1,0 +1,17 @@
+{
+    "contents" : "M <- 2\nMINEPS <- 1E-10\n\nsource('etriutils.R')\nsource('etributils.R')\nsource('etribbase.R')\n\n\netrib.init <- function(performances, profiles, assignments, th) {\n  stopifnot(ncol(performances) == ncol(profiles))\n  stopifnot(ncol(assignments) == 2)\n  stopifnot(nrow(th) == ncol(performances))\n  profiles <- createBorderProfiles(profiles, assignments)\n  \n  message(\"--- constructing base model\")\n  \n  etrib <- list()\n  etrib <- buildBaseModel(etrib, performances, profiles, assignments, th)\n  \n  return(etrib)\n}\n\n\nbuildBaseModel <- function(etrib, performances, profiles, assignments, th) {\n  nAlts <- nrow(performances)\n  nCrit <- ncol(performances)\n  nAssignments <- nrow(assignments)\n  nCats <- nrow(profiles)\n  \n  \n  etrib <- createEpsilonConstraint(etrib)\n  etrib <- createB1Constraint(etrib, nCrit)\n  etrib <- createB2Constraint(etrib, nCrit, nCats)\n  etrib <- createB4Constraint(etrib)\n  etrib <- createB5Constraint(etrib, nCrit)\n  etrib <- createB6Constraint(etrib, performances, profiles, th)\n  \n  ##allConst <- combineConstraintsMatrix(ec)\n  ##colnames(allConst$lhs) <- getColNames(nAlts, nCrit, nAssignments, nCats)\n  return(etrib)\n}\n\ncreateEpsilonConstraint <- function(eb){\n  lhs <- matrix(c(1))\n  rownames(lhs) <- c(\"EC\")\n  dir <- matrix(c(\">=\"))\n  rownames(dir) <- c(\"EC\")\n  rhs <- matrix(MINEPS)\n  rownames(rhs) <- c(\"EC\")\n  eb$constr <- list(lhs=lhs, dir=dir, rhs=rhs)\n  eb$epsylonIndex <- 1\n  return(eb)\n}\n",
+    "created" : 1400550717179.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3070814775",
+    "id" : "F3371FB2",
+    "lastKnownWriteTime" : 1400884047,
+    "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/etrib.R",
+    "project_path" : "etrib.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

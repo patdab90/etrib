@@ -3,6 +3,7 @@ MINEPS <- 1E-10
 
 source('etriutils.R')
 source('etributils.R')
+source('etribbase.R')
 
 
 etrib.init <- function(performances, profiles, assignments, th) {
@@ -32,6 +33,7 @@ buildBaseModel <- function(etrib, performances, profiles, assignments, th) {
   etrib <- createB2Constraint(etrib, nCrit, nCats)
   etrib <- createB4Constraint(etrib)
   etrib <- createB5Constraint(etrib, nCrit)
+  etrib <- createB6Constraint(etrib, performances, profiles, th)
   
   ##allConst <- combineConstraintsMatrix(ec)
   ##colnames(allConst$lhs) <- getColNames(nAlts, nCrit, nAssignments, nCats)
@@ -48,87 +50,4 @@ createEpsilonConstraint <- function(eb){
   eb$constr <- list(lhs=lhs, dir=dir, rhs=rhs)
   eb$epsylonIndex <- 1
   return(eb)
-}
-
-
-
-createB1Constraint <- function(etrib, nCrit) {
-  varnames <- c()
-  for(j in 1:nCrit){
-    name <- paste("w",j, sep="")
-    varnames = c(varnames, name)
-  }
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
-  
-  weigthConst <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=nrow(etrib$constr$lhs), dimnames=list("B1"))
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, weigthConst)
-  
-  for(name in varnames){
-    etrib$constr$lhs[nrow(etrib$constr$lhs), name] <- 1
-  } 
-  
-  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B1")))
-  etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B1")))
-  
-  return(etrib)
-}
-
-createB2Constraint <- function(etrib, nCrit, nProf) {
-  varnames <- c()
-  for(i in 1:nCrit){
-    name <- paste0("c", i, "(b", nProf-1, ", b0)")
-    varnames = c(varnames, name)
-  }
-  etrib$B2StartIndex <- ncol(etrib$constr$lhs)
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
-  etrib$B2EndIndex <- ncol(etrib$constr$lhs)
-  
-  for(i in 1:nCrit){
-    cName <- paste0("c", i, "(b", nProf-1, ", b0)")
-    wName <- paste0("w", i)
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B2", colnames(etrib$constr$lhs)))
-    lhs[,cName] <- (-1)
-    lhs[,wName] <- 1
-    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-    
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list("B2")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B2")))
-  }
-  
-  return(etrib)
-}
-
-createB4Constraint <- function(etrib){
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, c("L"))
-  
-  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
-  lhs[,"L"] <- 1
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B4")))
-  etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B4")))
-  
-  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
-  lhs[,"L"] <- 1
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0.5, ncol=1, nrow=1, dimnames=list("B4")))
-  etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B4")))
-  return(etrib)
-}
-
-createB5Constraint <- function(etrib, nCrit){
-  for(j in 1:nCrit){
-    name <- paste0("w",j)
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
-    lhs[,name] <- 1
-    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list("B5")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B5")))
-    
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
-    lhs[,name] <- 1
-    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B5")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B5")))
-  }
-  return(etrib)
 }
