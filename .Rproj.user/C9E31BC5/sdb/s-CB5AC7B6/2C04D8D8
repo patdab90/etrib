@@ -1,0 +1,16 @@
+{
+    "contents" : "b0,300,8,10,10,10\nb1,200,7,6,6,8\nb2,150,5,4,4,5\nb3,100,3,2,3,2\nb4,50,2,1,1,1\nb5,20,1,0,0,0\n",
+    "created" : 1400902213191.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "787851612",
+    "id" : "2C04D8D8",
+    "lastKnownWriteTime" : 1400902359,
+    "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/profs.csv",
+    "project_path" : "profs.csv",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "text"
+}

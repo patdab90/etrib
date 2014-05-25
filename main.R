@@ -22,18 +22,20 @@ profs <- profs[,2:ncol(profs)]
 colnames(profs) <- colnames(alts)
 #przykładowe progi
 thresholds <- matrix(c(
-  0, 0.01, 0, 0.02, FALSE,
-  0, 0, 1.9, 0, FALSE,
-  0, 0, 1.9, 0, FALSE,
-  0, 0, 1.9, 0, FALSE,
-  0, 0, 2, 0, FALSE),ncol=5, byrow=TRUE)
+  0, 0.01, 0, 0.02,
+  0, 0, 1.9, 0,
+  0, 0, 1.9, 0, 
+  0, 0, 1.9, 0,
+  0, 0, 2, 0),ncol=4, byrow=TRUE)
 
 ## przykładowe przdziały do klas
 assigs1 <- matrix(c(
-  1, 1,
-  5, 2),  , ncol=2, byrow=TRUE)
+  1, 1, 2,
+  5, 2, 2),  , ncol=3, byrow=TRUE)
+
+monotonicity <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
   
 message("--- starting tests, iteration 1")
 
-etri <- etrib.init(alts, profs, assigs1, th=thresholds)
-etri
+etri <- etrib.init(alts, profs, assigs1,monotonicity, th=thresholds)
+etri$constr$lhs

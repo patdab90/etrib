@@ -1,0 +1,17 @@
+{
+    "contents" : "M <- 2\nMINEPS <- 1E-10\n\nsource('etriutils.R')\nsource('etributils.R')\nsource('etribbase.R')\n\n\netrib.init <- function(performances, profiles, assignments,monotonicity, th) {\n  stopifnot(ncol(performances) == ncol(profiles))\n  stopifnot(ncol(assignments) == 3)\n  stopifnot(nrow(th) == ncol(performances))\n  stopifnot(nrow(th) == length(monotonicity))\n  profiles <- createBorderProfiles(profiles, assignments)\n  \n  message(\"--- constructing base model\")\n  \n  etrib <- list()\n  etrib <- buildBaseModel(etrib, performances, profiles, assignments,monotonicity, th)\n  etrib <- createAEConstraint(etrib,  performances, assignments)\n  \n  return(etrib)\n}\n\n\nbuildBaseModel <- function(etrib, performances, profiles, assignments,monotonicity, th) {\n  nAlts <- nrow(performances)\n  nCrit <- ncol(performances)\n  nAssignments <- nrow(assignments)\n  nCats <- nrow(profiles)\n  \n  \n  etrib <- createEpsilonConstraint(etrib)\n  etrib <- createB1Constraint(etrib, nCrit)\n  etrib <- createB2Constraint(etrib, nCrit, nCats)\n  etrib <- createB4Constraint(etrib)\n  etrib <- createB5Constraint(etrib, nCrit)\n  etrib <- createB6Constraint(etrib, performances, profiles,monotonicity, th)\n  \n  ##allConst <- combineConstraintsMatrix(ec)\n  ##colnames(allConst$lhs) <- getColNames(nAlts, nCrit, nAssignments, nCats)\n  return(etrib)\n}\n\ncreateAEConstraint <- function(etrib, performances, assignments){\n  nCrit <- ncol(performances)\n  nrows <- nrow(assignments)*2\n  rnames <- paste0(\"AE.\",1:nrows)\n  lhs <- matrix(0, nrow=nrows, ncol=ncol(etrib$constr$lhs), dimnames=list(rnames,colnames(etrib$constr$lhs)))\n  \n  row <- 0\n  for(i in 1:nrow(assignments)){\n    a <- assignments[i,]\n    row <- row + 1\n    for(j in 1:nCrit){\n      nameL <- paste0(\"c\",j,\"(a\",a[1],\",b\",a[2],\")\")\n      lhs[row,nameL] <- 1\n    }\n    lhs[row,\"L\"] <- -1\n  }\n  \n  for(i in 1:nrow(assignments)){\n    a <- assignments[i,]\n    row <- row + 1\n    for(j in 1:nCrit){\n      nameU <- paste0(\"c\",j,\"(a\",a[1],\",b\",a[3],\")\")\n      lhs[row,nameU] <- 1\n    }\n    lhs[row,\"L\"] <- -1\n    lhs[row,\"e\"] <- 1\n  }\n  \n  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)\n  \n  dir <- as.matrix(rep(c(\">=\",\"<=\"), each=row/2))\n  rownames(dir) <- rnames\n  etrib$constr$dir <- rbind(etrib$constr$dir, dir)\n  rhs <- as.matrix(rep(0, row))\n  rownames(rhs) <- rnames\n  etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)\n  \n  return(etrib)\n}\n",
+    "created" : 1400978849095.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3625727433",
+    "id" : "CAE48DB8",
+    "lastKnownWriteTime" : 1400985363,
+    "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/etrib.R",
+    "project_path" : "etrib.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

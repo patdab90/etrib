@@ -1,3 +1,16 @@
+createEpsilonConstraint <- function(eb){
+  lhs <- matrix(c(1))
+  rownames(lhs) <- c("EC")
+  colnames(lhs) <- c("e")
+  dir <- matrix(c(">="))
+  rownames(dir) <- c("EC")
+  rhs <- matrix(MINEPS)
+  rownames(rhs) <- c("EC")
+  eb$constr <- list(lhs=lhs, dir=dir, rhs=rhs)
+  eb$epsylonIndex <- 1
+  return(eb)
+}
+
 createB1Constraint <- function(etrib, nCrit) {
   varnames <- c()
   for(j in 1:nCrit){
@@ -79,7 +92,7 @@ createB5Constraint <- function(etrib, nCrit){
   return(etrib)
 }
 
-createB6Constraint <- function(etrib, performances, profiles, th){
+createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
   nAlts <- nrow(performances)
   nCats <- nrow(profiles)
   nCrit <- ncol(performances)
@@ -88,7 +101,7 @@ createB6Constraint <- function(etrib, performances, profiles, th){
   for (j in 1:nCrit) {
     for (a in 1:nAlts) {
       for (b in 1:nCats) {
-        varnames = c(varnames, paste0('c', j, '(a', a, ',b', b, ')'))
+        varnames = c(varnames, paste0('c', j, '(a', a, ',b', b-1, ')'))
       }
     }
   }
@@ -96,15 +109,13 @@ createB6Constraint <- function(etrib, performances, profiles, th){
   for (j in 1:nCrit) {
     for (b in 1:nCats) {    
       for (a in 1:nAlts) {
-        varnames = c(varnames, paste0('c', j, '(b', b, ',a', a, ')'))
+        varnames = c(varnames, paste0('c', j, '(b', b-1, ',a', a, ')'))
       }
     }
   }
   
-  message(ncol(varnames))
-  
   etrib$constr$lhs <- etriutils.addVariables(constr=etrib$constr$lhs, names=varnames)
-  rownames <- paste0("B5.", seq(1:length(varnames)))
+  rownames <- paste0("B6.", seq(1:length(varnames)))
   lhs <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=length(varnames), dimnames=list(rownames, colnames(etrib$constr$lhs)))
   
   row <- 0
@@ -112,23 +123,23 @@ createB6Constraint <- function(etrib, performances, profiles, th){
     for (aInd in 1 : nAlts) {
       for (bInd in 1 : nCats) {
         row = row + 1        
-        indAB <- paste0('c', j, '(a', aInd, ',b', bInd, ')')
+        indAB <- paste0('c', j, '(a', aInd, ',b', bInd-1, ')')
         lhs[row,indAB] = 1
         lhs[row,paste0("w",j)] = -1 *
           outranking(performances[aInd,j], profiles[bInd,j],
-                     th[j,1], th[j,2], th[j, 3], th[j, 4], th[j, 5])
+                     th[j,1], th[j,2], th[j, 3], th[j, 4], monotonicity[j])
       }
     }
   }
   
-  for (j in 1 : nCrit) {
-    for (bInd in 1 : nCats) {
-      for (aInd in 1 : nAlts) {
+  for (j in 1:nCrit) {
+    for (bInd in 1:nCats) {
+      for (aInd in 1:nAlts) {
         row = row + 1        
-        indBA <- paste0('c', j, '(b', bInd, ',a', aInd, ')')  
+        indBA <- paste0('c', j, '(b', bInd-1, ',a', aInd, ')')  
         lhs[row,indBA] = 1
         val <- -1 * outranking(profiles[bInd,j], performances[aInd,j],
-                               th[j,1], th[j,2], th[j, 3], th[j, 4], th[j, 5])
+                               th[j,1], th[j,2], th[j, 3], th[j, 4], monotonicity[j])
         lhs[row,paste0("w",j)] = val
       }
     }
@@ -137,10 +148,10 @@ createB6Constraint <- function(etrib, performances, profiles, th){
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
   
   rownames(lhs) <- rownames
-  dir <- as.matrix(rep("==", row))
+  dir <- matrix("==", nrow=row, ncol=1)
   rownames(dir) <- rownames
   etrib$constr$dir <- rbind(etrib$constr$dir, dir)
-  rhs <- as.matrix(rep(0, row))
+  rhs <- matrix(0, nrow=length(varnames), ncol=1)
   rownames(rhs) <- rownames
   etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
   
@@ -166,4 +177,11 @@ outranking <- function(x, y, q, qMult, p, pMult, ascending) {
   } else {
     return ((pref-diff) / (pref - indif))
   }
+}
+
+
+outranking <- function(ax, x, b, ay, y, by, monotonicity){
+  gx <- ax
+  gy <- ay*y+by
+  
 }
