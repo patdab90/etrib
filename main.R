@@ -37,5 +37,5 @@ monotonicity <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
   
 message("--- starting tests, iteration 1")
 
-etri <- etrib.init(alts, profs, assigs1,monotonicity, th=thresholds)
+etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds)
 etri$constr$lhs

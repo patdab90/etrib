@@ -178,10 +178,3 @@ outranking <- function(x, y, q, qMult, p, pMult, ascending) {
     return ((pref-diff) / (pref - indif))
   }
 }
-
-
-outranking <- function(ax, x, b, ay, y, by, monotonicity){
-  gx <- ax
-  gy <- ay*y+by
-  
-}

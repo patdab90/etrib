@@ -17,7 +17,7 @@ etrib.init <- function(performances, profiles, assignments,monotonicity, th) {
   
   etrib <- list()
   etrib <- buildBaseModel(etrib, performances, profiles, assignments,monotonicity, th)
-  etrib <- createAEConstraint(etrib,  performances, assignments)
+  ##etrib <- createAEConstraint(etrib,  performances, assignments)
   
   return(etrib)
 }
@@ -79,5 +79,78 @@ createAEConstraint <- function(etrib, performances, assignments){
   rownames(rhs) <- rnames
   etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
   
+  return(etrib)
+}
+
+createCC1Constraints <- function(etrib, A, H){
+  varnames <- c()
+  for(a in A){
+    for(h in H){
+      varnames <- c(varnames, paste0("v(a",a,",h",h,")"))
+    }
+  }
+  
+  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
+  
+
+  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC1.",1:length(A)),colnames(etrib$constr$lhs)))
+  
+  rows <- 0
+  for(a in A){
+    rows <- rows + 1
+    for(h in H){
+      v <-  paste0("v(a",a,",h",h,")")
+      lhs[rows, v] <- 1
+    }
+  }
+  
+
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  
+  return(etrib)
+}
+
+createCC2Constraints <- function(etrib, A, H, J){
+  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC2.",1:length(A)),colnames(etrib$constr$lhs)))
+  
+  rows <- 0
+  for(a in A){
+    rows <- rows + 1
+    for(h in 2:length(H)){
+      v <-  paste0("v(a",a,",h",h,")")
+      lhs[rows, v] <- -1 * M
+      lhs[rows, "L"] <- -1
+      for(j in J){
+          cab1 <- paste0("c",j,"(a",a,",b",h-1,")")
+          lhs[rows, cab1] <- 1
+      }   
+    }
+  }
+  
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  ##// TODO dir rhs
+  return(etrib)
+}
+
+createCC3Constraints <- function(etrib, A, H, J){
+  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC3.",1:length(A)),colnames(etrib$constr$lhs)))
+  
+  rows <- 0
+  for(a in A){
+    rows <- rows + 1
+    for(h in 1:(length(H)-1){
+      v <-  paste0("v(a",a,",h",h,")")
+      lhs[rows, v] <- M
+      lhs[rows, "L"] <- -1
+      lhs[rows, "e"] <- 1
+      for(j in J){
+        cab1 <- paste0("c",j,"(a",a,",b",h,")")
+        lhs[rows, cab1] <- 1
+      }   
+    }
+  }
+  
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  ##// TODO dir rhs
   return(etrib)
 }
