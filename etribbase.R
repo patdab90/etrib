@@ -11,20 +11,12 @@ createEpsilonConstraint <- function(eb){
   return(eb)
 }
 
-createB1Constraint <- function(etrib, nCrit) {
-  varnames <- c()
-  for(j in 1:nCrit){
-    name <- paste("w",j, sep="")
-    varnames = c(varnames, name)
-  }
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
-  
-  weigthConst <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=nrow(etrib$constr$lhs), dimnames=list("B1"))
+createB1Constraint <- function(etrib, J) {
+  weigthConst <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=1, dimnames=list("B1"))
   etrib$constr$lhs <- rbind(etrib$constr$lhs, weigthConst)
   
-  for(name in varnames){
-    etrib$constr$lhs[nrow(etrib$constr$lhs), name] <- 1
-  } 
+  weigths <- paste0("w",J)
+  etrib$constr$lhs[nrow("B1"), weigths] <- 1
   
   etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B1")))
   etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B1")))
@@ -32,20 +24,12 @@ createB1Constraint <- function(etrib, nCrit) {
   return(etrib)
 }
 
-createB2Constraint <- function(etrib, nCrit, nProf) {
-  varnames <- c()
-  for(i in 1:nCrit){
-    name <- paste0("c", i, "(b", nProf-1, ", b0)")
-    varnames = c(varnames, name)
-  }
-  etrib$B2StartIndex <- ncol(etrib$constr$lhs)
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
-  etrib$B2EndIndex <- ncol(etrib$constr$lhs)
-  
-  for(i in 1:nCrit){
-    cName <- paste0("c", i, "(b", nProf-1, ", b0)")
-    wName <- paste0("w", i)
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B2", colnames(etrib$constr$lhs)))
+createB2Constraint <- function(etrib, J, H) {
+  p <- length(H)
+  for(j in J){
+    cName <- paste0("c", j, "(b", p, ",b0)")
+    wName <- paste0("w", j)
+    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("B2.",j), colnames(etrib$constr$lhs)))
     lhs[,cName] <- (-1)
     lhs[,wName] <- 1
     etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
@@ -58,37 +42,44 @@ createB2Constraint <- function(etrib, nCrit, nProf) {
 }
 
 createB4Constraint <- function(etrib){
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, c("L"))
-  
-  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
+  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4.1", colnames(etrib$constr$lhs)))
   lhs[,"L"] <- 1
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B4")))
-  etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B4")))
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B4.1")))
+  etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B4.1")))
   
-  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4", colnames(etrib$constr$lhs)))
+  lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B4.2", colnames(etrib$constr$lhs)))
   lhs[,"L"] <- 1
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0.5, ncol=1, nrow=1, dimnames=list("B4")))
-  etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B4")))
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0.5, ncol=1, nrow=1, dimnames=list("B4.2")))
+  etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B4.2")))
   return(etrib)
 }
 
-createB5Constraint <- function(etrib, nCrit){
-  for(j in 1:nCrit){
-    name <- paste0("w",j)
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
-    lhs[,name] <- 1
-    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list("B5")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=1, dimnames=list("B5")))
-    
-    lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list("B5", colnames(etrib$constr$lhs)))
-    lhs[,name] <- 1
-    etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B5")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=1, dimnames=list("B5")))
+createB5Constraint <- function(etrib, J){
+  names <- paste0("w",J)
+  m <- length(names)
+  lhs <- matrix(0, nrow = m*2, ncol=ncol(etrib$constr$lhs),
+                dimnames = list(paste0("B5",1:(m*2)), colnames(etrib$constr$lhs)))
+                
+  dir <- matrix(rep(">=","<=",m), nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
+  
+  rhs <- matrix(1, nrow = m*2, ncol = 1, dimnames = list(paste0("B5",1:(m*2))))
+  
+  row <- 0
+  for(name in names){
+    row <- row + 1
+    lhs[row,name] <- 1
+  
+    row <- row + 1
+    lhs[row,name] <- 1
+      
   }
+  
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
+  etrib$constr$dir <- rbind(etrib$constr$dir, dir)
+  
   return(etrib)
 }
 
@@ -96,34 +87,18 @@ createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
   nAlts <- nrow(performances)
   nCats <- nrow(profiles)
   nCrit <- ncol(performances)
-  varnames <- c()
   
-  for (j in 1:nCrit) {
-    for (a in 1:nAlts) {
-      for (b in 1:nCats) {
-        varnames = c(varnames, paste0('c', j, '(a', a, ',b', b-1, ')'))
-      }
-    }
-  }
-  
-  for (j in 1:nCrit) {
-    for (b in 1:nCats) {    
-      for (a in 1:nAlts) {
-        varnames = c(varnames, paste0('c', j, '(b', b-1, ',a', a, ')'))
-      }
-    }
-  }
-  
-  etrib$constr$lhs <- etriutils.addVariables(constr=etrib$constr$lhs, names=varnames)
-  rownames <- paste0("B6.", seq(1:length(varnames)))
-  lhs <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=length(varnames), dimnames=list(rownames, colnames(etrib$constr$lhs)))
+  nrows <- nCrit*nCats*nAlts*2
+
+  rownames <- paste0("B6.", seq(1:nrows))
+  lhs <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=nrows, dimnames=list(rownames, colnames(etrib$constr$lhs)))
   
   row <- 0
   for (j in 1 : nCrit) {
     for (aInd in 1 : nAlts) {
       for (bInd in 1 : nCats) {
         row = row + 1        
-        indAB <- paste0('c', j, '(a', aInd, ',b', bInd-1, ')')
+        indAB <- paste0('c', j, '(a', aInd, ',b', bInd, ')')
         lhs[row,indAB] = 1
         lhs[row,paste0("w",j)] = -1 *
           outranking(performances[aInd,j], profiles[bInd,j],
@@ -136,7 +111,7 @@ createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
     for (bInd in 1:nCats) {
       for (aInd in 1:nAlts) {
         row = row + 1        
-        indBA <- paste0('c', j, '(b', bInd-1, ',a', aInd, ')')  
+        indBA <- paste0('c', j, '(b', bInd, ',a', aInd, ')')  
         lhs[row,indBA] = 1
         val <- -1 * outranking(profiles[bInd,j], performances[aInd,j],
                                th[j,1], th[j,2], th[j, 3], th[j, 4], monotonicity[j])
@@ -151,7 +126,7 @@ createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
   dir <- matrix("==", nrow=row, ncol=1)
   rownames(dir) <- rownames
   etrib$constr$dir <- rbind(etrib$constr$dir, dir)
-  rhs <- matrix(0, nrow=length(varnames), ncol=1)
+  rhs <- matrix(0, nrow=nrows, ncol=1)
   rownames(rhs) <- rownames
   etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
   

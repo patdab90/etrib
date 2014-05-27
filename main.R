@@ -1,5 +1,6 @@
 library(ROI.plugin.glpk)
 library(ROI)
+
 solvers <- ROI_installed_solvers()
 if (!is.na(solvers['symphony'])) {
   .solver <<- 'symphony'
@@ -8,6 +9,7 @@ if (!is.na(solvers['symphony'])) {
 } else {
   stop("No ROI Symphony or GLPK plugin installed")
 }
+
 source('etrib.R')
 
 #warianty
@@ -31,11 +33,15 @@ thresholds <- matrix(c(
 ## przykładowe przdziały do klas
 assigs1 <- matrix(c(
   1, 1, 2,
-  5, 2, 2),  , ncol=3, byrow=TRUE)
+  5, 2, 2),ncol=3, byrow=TRUE)
 
 monotonicity <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
+
+cardinalities <- matrix(c(
+  1, 2, 10,
+  3, 5, 20), ncol=3, byrow=TRUE)
   
 message("--- starting tests, iteration 1")
 
-etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds)
-etri$constr$lhs
+etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds, cardinalities)
+etri

@@ -1,4 +1,4 @@
-M <- 2
+M <- 1E+10
 MINEPS <- 1E-10
 
 source('etriutils.R')
@@ -6,18 +6,30 @@ source('etributils.R')
 source('etribbase.R')
 
 
-etrib.init <- function(performances, profiles, assignments,monotonicity, th) {
+etrib.init <- function(performances, profiles, assignments,monotonicity, th, cardinalities) {
   stopifnot(ncol(performances) == ncol(profiles))
   stopifnot(ncol(assignments) == 3)
+  stopifnot(nrow(assignments) < nrow(performances))
   stopifnot(nrow(th) == ncol(performances))
   stopifnot(nrow(th) == length(monotonicity))
   profiles <- createBorderProfiles(profiles, assignments)
   
   message("--- constructing base model")
   
+  
+  A <- 1:nrow(performances)
+  H <- 1:nrow(profiles)
+  J <- 1:ncol(performances)
+  
   etrib <- list()
+  
+  varnames <- createTRIBVariables(A, H, J)
+  etrib$constr$lhs <- intiMatrix(varnames)
+  etrib$constr$dir <- initDIRMatrix()
+  etrib$constr$rhs <- intiRHSMatrix()
+  
   etrib <- buildBaseModel(etrib, performances, profiles, assignments,monotonicity, th)
-  ##etrib <- createAEConstraint(etrib,  performances, assignments)
+  etrib <- buildAEModel(etrib,  J, assignments)
   
   return(etrib)
 }
@@ -29,50 +41,44 @@ buildBaseModel <- function(etrib, performances, profiles, assignments,monotonici
   nAssignments <- nrow(assignments)
   nCats <- nrow(profiles)
   
+  A <- 1:nrow(performances)
+  H <- 1:nrow(profiles)
+  J <- 1:ncol(performances)
   
-  etrib <- createEpsilonConstraint(etrib)
-  etrib <- createB1Constraint(etrib, nCrit)
-  etrib <- createB2Constraint(etrib, nCrit, nCats)
+  etrib <- createB1Constraint(etrib, J)
+  etrib <- createB2Constraint(etrib, J, H)
   etrib <- createB4Constraint(etrib)
-  etrib <- createB5Constraint(etrib, nCrit)
+  etrib <- createB5Constraint(etrib, J)
   etrib <- createB6Constraint(etrib, performances, profiles,monotonicity, th)
   
-  ##allConst <- combineConstraintsMatrix(ec)
-  ##colnames(allConst$lhs) <- getColNames(nAlts, nCrit, nAssignments, nCats)
   return(etrib)
 }
 
-createAEConstraint <- function(etrib, performances, assignments){
-  nCrit <- ncol(performances)
-  nrows <- nrow(assignments)*2
+buildAEModel <- function(etrib, J, assignments){
+  nAs <- nrow(assignments)
+  nrows <- nAs * 2
   rnames <- paste0("AE.",1:nrows)
   lhs <- matrix(0, nrow=nrows, ncol=ncol(etrib$constr$lhs), dimnames=list(rnames,colnames(etrib$constr$lhs)))
   
   row <- 0
-  for(i in 1:nrow(assignments)){
+  for(i in 1:nAs){
     a <- assignments[i,]
     row <- row + 1
-    for(j in 1:nCrit){
-      nameL <- paste0("c",j,"(a",a[1],",b",a[2],")")
-      lhs[row,nameL] <- 1
-    }
+    lhs[row,paste0("c",J,"(a",a[1],",b",a[2],")")] <- 1
     lhs[row,"L"] <- -1
   }
   
-  for(i in 1:nrow(assignments)){
+  for(i in 1:nAs){
     a <- assignments[i,]
     row <- row + 1
-    for(j in 1:nCrit){
-      nameU <- paste0("c",j,"(a",a[1],",b",a[3],")")
-      lhs[row,nameU] <- 1
-    }
+    lhs[row,paste0("c",J,"(a",a[1],",b",a[3],")")] <- 1
     lhs[row,"L"] <- -1
     lhs[row,"e"] <- 1
   }
   
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
   
-  dir <- as.matrix(rep(c(">=","<="), each=row/2))
+  dir <- as.matrix(rep(c(">=","<="), nAs))
   rownames(dir) <- rnames
   etrib$constr$dir <- rbind(etrib$constr$dir, dir)
   rhs <- as.matrix(rep(0, row))
@@ -82,75 +88,52 @@ createAEConstraint <- function(etrib, performances, assignments){
   return(etrib)
 }
 
-createCC1Constraints <- function(etrib, A, H){
+createTRIBVariables <- function(A, H, J){
   varnames <- c()
+  
+  p <- length(H)
+  
+  varnames <- paste0("w",J)
+  varnames <- c(varnames, c("L"))
+  varnames <- c(varnames, c("e"))
+  varnames = c(varnames, paste0("c", J, "(b", p, ",b0)"))
+
   for(a in A){
     for(h in H){
       varnames <- c(varnames, paste0("v(a",a,",h",h,")"))
     }
   }
   
-  etrib$constr$lhs <- etriutils.addVariables(etrib$constr$lhs, varnames)
-  
-
-  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC1.",1:length(A)),colnames(etrib$constr$lhs)))
-  
-  rows <- 0
-  for(a in A){
-    rows <- rows + 1
-    for(h in H){
-      v <-  paste0("v(a",a,",h",h,")")
-      lhs[rows, v] <- 1
+  for (a in A) {
+    for (b in H) {
+      varnames = c(varnames, paste0('c', J, '(a', a, ',b', b, ')'))
     }
   }
   
-
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  
-  return(etrib)
-}
-
-createCC2Constraints <- function(etrib, A, H, J){
-  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC2.",1:length(A)),colnames(etrib$constr$lhs)))
-  
-  rows <- 0
-  for(a in A){
-    rows <- rows + 1
-    for(h in 2:length(H)){
-      v <-  paste0("v(a",a,",h",h,")")
-      lhs[rows, v] <- -1 * M
-      lhs[rows, "L"] <- -1
-      for(j in J){
-          cab1 <- paste0("c",j,"(a",a,",b",h-1,")")
-          lhs[rows, cab1] <- 1
-      }   
+  for (b in H) {    
+    for (a in A) {
+      varnames = c(varnames, paste0('c', J, '(b', b, ',a', a, ')'))
     }
   }
   
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  ##// TODO dir rhs
-  return(etrib)
+  return(varnames)
 }
 
-createCC3Constraints <- function(etrib, A, H, J){
-  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("CC3.",1:length(A)),colnames(etrib$constr$lhs)))
-  
-  rows <- 0
-  for(a in A){
-    rows <- rows + 1
-    for(h in 1:(length(H)-1){
-      v <-  paste0("v(a",a,",h",h,")")
-      lhs[rows, v] <- M
-      lhs[rows, "L"] <- -1
-      lhs[rows, "e"] <- 1
-      for(j in J){
-        cab1 <- paste0("c",j,"(a",a,",b",h,")")
-        lhs[rows, cab1] <- 1
-      }   
-    }
-  }
-  
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
-  ##// TODO dir rhs
-  return(etrib)
+intiMatrix <- function(names){
+  lhs <- matrix(0, ncol=length(names), nrow=1,dimnames=list("E",names))
+  lhs["E","e"] <- 1
+  return(lhs)
 }
+
+initDIRMatrix <- function(){
+  dir <- matrix(c(">="))
+  rownames(dir) <- c("E")
+  return(dir)
+}
+
+intiRHSMatrix <- function(){
+  rhs <- matrix(MINEPS)
+  rownames(rhs) <- "E"
+  return(rhs)
+}
+
