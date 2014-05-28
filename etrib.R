@@ -4,11 +4,15 @@ MINEPS <- 1E-10
 source('etriutils.R')
 source('etributils.R')
 source('etribbase.R')
+source('etribcardinalities.R')
+source('etribpairwisecomp.R')
 
 
-etrib.init <- function(performances, profiles, assignments,monotonicity, th, cardinalities) {
+etrib.init <- function(performances, profiles, assignments,monotonicity, th, cardinalities, pCk, pCl) {
   stopifnot(ncol(performances) == ncol(profiles))
   stopifnot(ncol(assignments) == 3)
+  stopifnot(ncol(pCk) == 3)
+  stopifnot(ncol(pCl) == 3)
   stopifnot(nrow(assignments) < nrow(performances))
   stopifnot(nrow(th) == ncol(performances))
   stopifnot(nrow(th) == length(monotonicity))
@@ -16,35 +20,26 @@ etrib.init <- function(performances, profiles, assignments,monotonicity, th, car
   
   message("--- constructing base model")
   
-  
   A <- 1:nrow(performances)
   H <- 1:nrow(profiles)
   J <- 1:ncol(performances)
   
   etrib <- list()
-  
-  varnames <- createTRIBVariables(A, H, J)
+  varnames <- createTRIBVariables(A, H, J, pCk, pCl)
   etrib$constr$lhs <- intiMatrix(varnames)
   etrib$constr$dir <- initDIRMatrix()
   etrib$constr$rhs <- intiRHSMatrix()
   
-  etrib <- buildBaseModel(etrib, performances, profiles, assignments,monotonicity, th)
-  etrib <- buildAEModel(etrib,  J, assignments)
+  etrib <- buildBaseModel(etrib, performances, profiles, monotonicity, th, A, H, J)
+  etrib <- buildAEModel(etrib, J, assignments)
+  etrib <- buildCCModel(etrib, A, H, J, cardinalities)
+  etrib <- buildPConstraint(etrib, J, H, pCk, pCl)
   
   return(etrib)
 }
 
 
-buildBaseModel <- function(etrib, performances, profiles, assignments,monotonicity, th) {
-  nAlts <- nrow(performances)
-  nCrit <- ncol(performances)
-  nAssignments <- nrow(assignments)
-  nCats <- nrow(profiles)
-  
-  A <- 1:nrow(performances)
-  H <- 1:nrow(profiles)
-  J <- 1:ncol(performances)
-  
+buildBaseModel <- function(etrib, performances, profiles, monotonicity, th, A, H, J) {
   etrib <- createB1Constraint(etrib, J)
   etrib <- createB2Constraint(etrib, J, H)
   etrib <- createB4Constraint(etrib)
@@ -88,7 +83,26 @@ buildAEModel <- function(etrib, J, assignments){
   return(etrib)
 }
 
-createTRIBVariables <- function(A, H, J){
+buildCCModel <- function(etrib, A, H, J, cardinalities){
+  etrib <- createCC1Constraints(etrib, A, H)
+  etrib <- createCC2Constraints(etrib, A, H, J)
+  etrib <- createCC3Constraints(etrib, A, H, J)
+  etrib <- createCC4Constraints(etrib, A, cardinalities)
+  etrib <- createCC5Constraints(etrib, A, cardinalities)
+  return(etrib)
+}
+
+buildPConstraint <- function(etrib, J, H, pCk, pCl){
+  etrib <- createPC1Constrints(etrib, J, H, pCk)
+  etrib <- createPC2Constrints(etrib, J, H, pCk)
+  etrib <- createPC3Constrints(etrib, J, H, pCk)
+  etrib <- createPU1Constrints(etrib, J, H, pCl)
+  etrib <- createPU2Constrints(etrib, J, H, pCl)
+  etrib <- createPU3Constrints(etrib, J, H, pCl)
+  return(etrib)
+}
+
+createTRIBVariables <- function(A, H, J, pCk, pCl){
   varnames <- c()
   
   p <- length(H)
@@ -105,15 +119,25 @@ createTRIBVariables <- function(A, H, J){
   }
   
   for (a in A) {
-    for (b in H) {
-      varnames = c(varnames, paste0('c', J, '(a', a, ',b', b, ')'))
+    for (b in c(0,H)) {
+      varnames <- c(varnames, paste0('c', J, '(a', a, ',b', b, ')'))
     }
   }
   
   for (b in H) {    
     for (a in A) {
-      varnames = c(varnames, paste0('c', J, '(b', b, ',a', a, ')'))
+      varnames <- c(varnames, paste0('c', J, '(b', b, ',a', a, ')'))
     }
+  }
+  
+  for(row in nrow(pCk)){
+    pck <- pCk[row,]
+    varnames <- c(varnames, paste0("v(a",pck[1],",b",pck[2],",>=",pck[3],",h",1:(p-pck[3]),")"))
+  }
+  
+  for(row in nrow(pCl)){
+    pcl <- pCl[row,]
+    varnames <- c(varnames, paste0("v(a",pcl[1],",b",pcl[2],",<=",pcl[3],",h",1:(p-pcl[3]),")"))
   }
   
   return(varnames)

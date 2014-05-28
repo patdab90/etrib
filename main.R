@@ -40,8 +40,17 @@ monotonicity <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
 cardinalities <- matrix(c(
   1, 2, 10,
   3, 5, 20), ncol=3, byrow=TRUE)
+
+pairwiseComparisionsK <- matrix(c(
+  1, 2, 2,
+  3, 2, 1), ncol=3, byrow=TRUE)
+
+pairwiseComparisionsL <- matrix(c(
+  1, 2, 2,
+  3, 2, 1), ncol=3, byrow=TRUE)
   
 message("--- starting tests, iteration 1")
 
-etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds, cardinalities)
+etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds,
+                   cardinalities, pairwiseComparisionsK, pairwiseComparisionsL)
 etri

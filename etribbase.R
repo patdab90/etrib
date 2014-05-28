@@ -34,8 +34,8 @@ createB2Constraint <- function(etrib, J, H) {
     lhs[,wName] <- 1
     etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
     
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list("B2")))
-    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B2")))
+    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list(paste0("B2.",j))))
+    etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list(paste0("B2.",j))))
   }
   
   return(etrib)
@@ -64,7 +64,7 @@ createB5Constraint <- function(etrib, J){
                 
   dir <- matrix(rep(">=","<=",m), nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
   
-  rhs <- matrix(1, nrow = m*2, ncol = 1, dimnames = list(paste0("B5",1:(m*2))))
+  rhs <- matrix(1, nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
   
   row <- 0
   for(name in names){
@@ -92,7 +92,7 @@ createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
 
   rownames <- paste0("B6.", seq(1:nrows))
   lhs <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=nrows, dimnames=list(rownames, colnames(etrib$constr$lhs)))
-  
+  ## poprawic zeby profile były indeksowaneod 0!!!!!!!!!!!!!!!!!!!!!!!
   row <- 0
   for (j in 1 : nCrit) {
     for (aInd in 1 : nAlts) {

@@ -44,15 +44,15 @@ createCC3Constraints <- function(etrib, A, H, J){
   rows <- 0
   for(a in A){
     rows <- rows + 1
-    for(h in 1:(length(H)-1){
+    for(h in 1:(length(H)-1)){
       v <-  paste0("v(a",a,",h",h,")")
       lhs[rows, v] <- M
       lhs[rows, "L"] <- -1
       lhs[rows, "e"] <- 1
       lhs[rows, paste0("c",J,"(a",a,",b",h,")")] <- 1
-      }   
-    }
+    }   
   }
+  
   
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
   etrib$constr$dir <- rbind(etrib$constr$dir, matrix("<=", ncol=1, nrow=rows, dimnames=list(rnames)))
@@ -60,7 +60,7 @@ createCC3Constraints <- function(etrib, A, H, J){
   return(etrib)
 }
 
-createCC4Constraint <- function(etrib, A, cardinalities){
+createCC4Constraints <- function(etrib, A, cardinalities){
   specifiedCard <- cardinalities[cardinalities[,2] > 0,]
   ncard <- nrow(specifiedCard)
   
@@ -72,16 +72,20 @@ createCC4Constraint <- function(etrib, A, cardinalities){
   
   dir <- matrix(">=", nrow = ncard, ncol = 1, dimnames = list(rnames))
   
-  for(row in ncard){
+  for(row in 1:ncard){
     h <- cardinalities[row, ]
     lhs[row,paste0("v(a",A,",h",h[1],")")] <- 1
     rhs[row,] <- h[2]
   }
   
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  etrib$constr$dir <- rbind(etrib$constr$dir, dir)
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
+  
   return(etrib)
 }
 
-createCC5Constraint <- function(etrib, A, cardinalities){
+createCC5Constraints <- function(etrib, A, cardinalities){
   specifiedCard <- cardinalities[cardinalities[,3] > 0,]
   ncard <- nrow(specifiedCard)
   
@@ -93,11 +97,15 @@ createCC5Constraint <- function(etrib, A, cardinalities){
   
   dir <- matrix("<=", nrow = ncard, ncol = 1, dimnames = list(rnames))
   
-  for(row in ncard){
+  for(row in 1:ncard){
     h <- cardinalities[row, ]
     lhs[row,paste0("v(a",A,",h",h[1],")")] <- 1
     rhs[row,] <- h[3]
   }
+  
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
+  etrib$constr$dir <- rbind(etrib$constr$dir, dir)
+  etrib$constr$rhs <- rbind(etrib$constr$rhs, rhs)
   
   return(etrib)
 }
