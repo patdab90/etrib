@@ -12,11 +12,11 @@ createEpsilonConstraint <- function(eb){
 }
 
 createB1Constraint <- function(etrib, J) {
-  weigthConst <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=1, dimnames=list("B1"))
-  etrib$constr$lhs <- rbind(etrib$constr$lhs, weigthConst)
-  
+  weigthConst <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=1, dimnames=list("B1",colnames(etrib$constr$lhs)))
+    
   weigths <- paste0("w",J)
-  etrib$constr$lhs[nrow("B1"), weigths] <- 1
+  weigthConst[, weigths] <- 1
+  etrib$constr$lhs <- rbind(etrib$constr$lhs, weigthConst)
   
   etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1, ncol=1, nrow=1, dimnames=list("B1")))
   etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list("B1")))
@@ -27,14 +27,12 @@ createB1Constraint <- function(etrib, J) {
 createB2Constraint <- function(etrib, J, H) {
   p <- length(H)
   for(j in J){
-    cName <- paste0("c", j, "(b", p, ",b0)")
     wName <- paste0("w", j)
     lhs <- matrix(0, nrow=1, ncol=ncol(etrib$constr$lhs), dimnames=list(paste0("B2.",j), colnames(etrib$constr$lhs)))
-    lhs[,cName] <- (-1)
     lhs[,wName] <- 1
     etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
     
-    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(0, ncol=1, nrow=1, dimnames=list(paste0("B2.",j))))
+    etrib$constr$rhs <- rbind(etrib$constr$rhs, matrix(1/p, ncol=1, nrow=1, dimnames=list(paste0("B2.",j))))
     etrib$constr$dir <- rbind(etrib$constr$dir, matrix("==", ncol=1, nrow=1, dimnames=list(paste0("B2.",j))))
   }
   
@@ -60,12 +58,12 @@ createB5Constraint <- function(etrib, J){
   names <- paste0("w",J)
   m <- length(names)
   lhs <- matrix(0, nrow = m*2, ncol=ncol(etrib$constr$lhs),
-                dimnames = list(paste0("B5",1:(m*2)), colnames(etrib$constr$lhs)))
+                dimnames = list(paste0("B5.",1:(m*2)), colnames(etrib$constr$lhs)))
                 
-  dir <- matrix(rep(">=","<=",m), nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
+  dir <- matrix(rep.int(c(">=","<="),times=m), nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
   
-  rhs <- matrix(1, nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
-  
+  rhs <- matrix(rep.int(c(0, 1),times=m), nrow = m*2, ncol = 1, dimnames = list(paste0("B5.",1:(m*2))))
+ 
   row <- 0
   for(name in names){
     row <- row + 1
@@ -84,45 +82,48 @@ createB5Constraint <- function(etrib, J){
 }
 
 createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
-  nAlts <- nrow(performances)
-  nCats <- nrow(profiles)
-  nCrit <- ncol(performances)
+  a <- nrow(performances)
+  b <- nrow(profiles)-1
+  m <- ncol(performances)
   
-  nrows <- nCrit*nCats*nAlts*2
+  nrows <- m*(b+1)*a*2
 
   rownames <- paste0("B6.", seq(1:nrows))
   lhs <- matrix(0, ncol=ncol(etrib$constr$lhs), nrow=nrows, dimnames=list(rownames, colnames(etrib$constr$lhs)))
-  ## poprawic zeby profile były indeksowaneod 0!!!!!!!!!!!!!!!!!!!!!!!
+
   row <- 0
-  for (j in 1 : nCrit) {
-    for (aInd in 1 : nAlts) {
-      for (bInd in 1 : nCats) {
+  for (j in 1:m) {
+    for (aInd in 1 : a) {
+      for (bInd in 0 : b) {
         row = row + 1        
         indAB <- paste0('c', j, '(a', aInd, ',b', bInd, ')')
         lhs[row,indAB] = 1
-        lhs[row,paste0("w",j)] = -1 *
-          outranking(performances[aInd,j], profiles[bInd,j],
-                     th[j,1], th[j,2], th[j, 3], th[j, 4], monotonicity[j])
+        val = outranking(performances[aInd,j], profiles[bInd+1,j],
+                         th[j,2], th[j,1], th[j, 4], th[j, 3], monotonicity[j])
+        lhs[row,paste0("w",j)] = -1 * val
       }
     }
   }
   
-  for (j in 1:nCrit) {
-    for (bInd in 1:nCats) {
-      for (aInd in 1:nAlts) {
+  for (j in 1:m) {
+    for (bInd in 0:b) {
+      for (aInd in 1:a) {
         row = row + 1        
         indBA <- paste0('c', j, '(b', bInd, ',a', aInd, ')')  
         lhs[row,indBA] = 1
-        val <- -1 * outranking(profiles[bInd,j], performances[aInd,j],
-                               th[j,1], th[j,2], th[j, 3], th[j, 4], monotonicity[j])
-        lhs[row,paste0("w",j)] = val
+        val <-  outranking(profiles[bInd+1,j], performances[aInd,j],
+                               th[j,2], th[j,1], th[j, 4], th[j, 3], monotonicity[j])
+        lhs[row,paste0("w",j)] = -1 * val
       }
     }
   }
   
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
   
-  rownames(lhs) <- rownames
+  message(nrow(lhs))
+  message(length(rownames))
+  message(row)
+  
   dir <- matrix("==", nrow=row, ncol=1)
   rownames(dir) <- rownames
   etrib$constr$dir <- rbind(etrib$constr$dir, dir)
@@ -133,23 +134,20 @@ createB6Constraint <- function(etrib, performances, profiles,monotonicity, th){
   return(etrib)
 }
 
-## p is preference threshold
-## q is indifference threshold
-outranking <- function(x, y, q, qMult, p, pMult, ascending) {
-  stopifnot(p >= 0 && q >= 0 && p >= q)
+outranking <- function(x, y, qb, qa, pb, pa, ascending){
+  px <- pa * x + pb
+  py <- pa * y + pb
+  qx <- qa * x + qb
+  qy <- qa * y + qb
   diff <- y - x
-  if (ascending == FALSE) {
-    diff = 0 - diff
+  if(ascending == FALSE){
+    diff <- 0 - diff
   }
-  
-  indif <- q + qMult * x
-  pref <- p + pMult * x
-  
-  if (diff <= indif) {
-    return (1)
-  } else if (diff >= pref) {
+  if(diff >= px){
     return(0)
-  } else {
-    return ((pref-diff) / (pref - indif))
-  }
+  }else if(diff <= qx){
+    return(1)
+  }else 
+    return((px - diff)/(px - qx))
 }
+

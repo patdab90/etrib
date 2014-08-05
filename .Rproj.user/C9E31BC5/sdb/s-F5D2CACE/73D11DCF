@@ -1,0 +1,17 @@
+{
+    "contents" : "etriutils.addVariables <- function(constr, names){\n  ## \n  w <- matrix(0, ncol=length(names), nrow=nrow(constr))\n  colnames(w) <- names\n  constr <- cbind(constr, w)\n  return(constr)\n}\n\netriutils.getVariablesCount <- function(constr){\n  return(ncol(constr))\n}\n\netriutils.solve <- function(objectioveFunction, varTypes, lhs, dir, rhs, max){\n  obj <- L_objective(objectioveFunction)\n  roiConst <- L_constraint(lhs, dir, rhs)\n  \n  lp <- OP(objective=obj, constraints=roiConst, maximum=max, types=varTypes)\n  \n  ret <- ROI_solve(lp, .solver)\n  \n  return(ret)\n}\n\netriutils.getConstraintTypes <- function(varnames, binaryVarNames){\n  types <- matrix(\"C\", nrow = 1, ncol=length(varnames))\n  colnames(types) <- varnames\n  types[,binaryVarNames] <- \"B\"\n  return(types[1,])\n}\n\netriutils.buildObjectiveFunction <- function(varnames, objectivesVarNames){\n  row <- matrix(0, ncol=length(varnames))\n  colnames(row) <- varnames\n  row[,objectivesVarNames] <- 1\n  return(row[1,])\n}",
+    "created" : 1405401158489.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2235941041",
+    "id" : "73D11DCF",
+    "lastKnownWriteTime" : 1406480878,
+    "path" : "C:/Users/Patryk/Desktop/Praca Magisterska/ELECTRE TRI B/etrib/etriutils.R",
+    "project_path" : "etriutils.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

@@ -16,20 +16,21 @@ createCC1Constraints <- function(etrib, A, H){
   return(etrib)
 }
 
-createCC2Constraints <- function(etrib, A, H, J){
-  rnames <- paste0("CC2.",A)
-  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(rnames,colnames(etrib$constr$lhs)))
+createCC2Constraints <- function(etrib, J){
+  rnames <- paste0("CC2.",1:(etrib$n*(etrib$p-1)))
+  lhs <- matrix(0, nrow=(etrib$n*(etrib$p-1)), ncol=ncol(etrib$constr$lhs), dimnames=list(rnames, colnames(etrib$constr$lhs)))
   
   rows <- 0
-  for(a in A){
-    rows <- rows + 1
-    for(h in 2:length(H)){
+  for(a in 1:etrib$n){
+    for(h in 2:etrib$p){
+      rows <- rows + 1
       v <-  paste0("v(a",a,",h",h,")")
       lhs[rows, v] <- -1 * M
       lhs[rows, "L"] <- -1
       lhs[rows, paste0("c",J,"(a",a,",b",h-1,")")] <- 1   
     }
   }
+  stopifnot(rows == (etrib$n*(etrib$p-1)))
   
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)
   etrib$constr$dir <- rbind(etrib$constr$dir, matrix(">=", ncol=1, nrow=rows, dimnames=list(rnames)))
@@ -37,14 +38,14 @@ createCC2Constraints <- function(etrib, A, H, J){
   return(etrib)
 }
 
-createCC3Constraints <- function(etrib, A, H, J){
-  rnames <- paste0("CC3.",A)
-  lhs <- matrix(0, nrow=length(A), ncol=ncol(etrib$constr$lhs), dimnames=list(rnames,colnames(etrib$constr$lhs)))
+createCC3Constraints <- function(etrib, J){
+  rnames <- paste0("CC3.",1:(etrib$n*(etrib$p-1)))
+  lhs <- matrix(0, nrow=(etrib$n*(etrib$p-1)), ncol=ncol(etrib$constr$lhs), dimnames=list(rnames, colnames(etrib$constr$lhs)))
   
   rows <- 0
-  for(a in A){
-    rows <- rows + 1
-    for(h in 1:(length(H)-1)){
+  for(a in 1:etrib$n){
+    for(h in 1:(etrib$p-1)){
+      rows <- rows + 1
       v <-  paste0("v(a",a,",h",h,")")
       lhs[rows, v] <- M
       lhs[rows, "L"] <- -1
@@ -52,6 +53,8 @@ createCC3Constraints <- function(etrib, A, H, J){
       lhs[rows, paste0("c",J,"(a",a,",b",h,")")] <- 1
     }   
   }
+  
+  stopifnot(rows == (etrib$n*(etrib$p-1)))
   
   
   etrib$constr$lhs <- rbind(etrib$constr$lhs, lhs)

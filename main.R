@@ -13,44 +13,48 @@ if (!is.na(solvers['symphony'])) {
 source('etrib.R')
 
 #warianty
-alts <- read.table(file="alts.csv", sep=",", header=TRUE)
+alts <- read.table(file="alts.csv", sep="\t", header=TRUE)
 rownames(alts) = alts[,1]
 alts <- alts[,2:ncol(alts)]
 
 #granice klas
-profs <- read.table(file="profs.csv", sep=",", header=FALSE)
+profs <- read.table(file="profs.csv", sep="\t", header=FALSE)
 rownames(profs) = profs[,1]
 profs <- profs[,2:ncol(profs)]
 colnames(profs) <- colnames(alts)
 #przykładowe progi
 thresholds <- matrix(c(
-  0, 0.01, 0, 0.02,
-  0, 0, 1.9, 0,
-  0, 0, 1.9, 0, 
-  0, 0, 1.9, 0,
-  0, 0, 2, 0),ncol=4, byrow=TRUE)
+  0, 4, 0, 12,
+  0, 1, 0, 2,
+  0, 100, 0, 200),ncol=4, byrow=TRUE)
+  
+# przykładowe przdziały do klas
+assigs1 <- matrix(
+  c(2, 1, 2,
+    5, 2, 3),ncol=3, byrow=TRUE)
 
-## przykładowe przdziały do klas
-assigs1 <- matrix(c(
-  1, 1, 2,
-  5, 2, 2),ncol=3, byrow=TRUE)
+monotonicity <- c(TRUE, TRUE, FALSE)
 
-monotonicity <- c(FALSE, FALSE, FALSE, FALSE, FALSE)
+cardinalities <- matrix(
+  c(1, 1, 2,
+    3, 1, 1), ncol=3, byrow=TRUE)
 
-cardinalities <- matrix(c(
-  1, 2, 10,
-  3, 5, 20), ncol=3, byrow=TRUE)
+pairwiseComparisionsK <- NULL#matrix(c(1, 2, 0), ncol=3, byrow=TRUE)
 
-pairwiseComparisionsK <- matrix(c(
-  1, 2, 2,
-  3, 2, 1), ncol=3, byrow=TRUE)
-
-pairwiseComparisionsL <- matrix(c(
-  1, 2, 2,
-  3, 2, 1), ncol=3, byrow=TRUE)
+pairwiseComparisionsL <- NULL#matrix(c(5, 2, 2), ncol=3, byrow=TRUE)
   
 message("--- starting tests, iteration 1")
 
 etri <- etrib.init(alts, profs, assigs1, monotonicity, th=thresholds,
                    cardinalities, pairwiseComparisionsK, pairwiseComparisionsL)
-etri
+
+possibleAssigment <- etrib.possibleAssigment(etri)
+possibleAssigment
+preferenceRelation <- etrib.preferenceRelation(etri)
+preferenceRelation
+extremeCardinalitiesMax <- etrib.extremeCardinalities(etri, TRUE)
+extremeCardinalitiesMax
+extremeCardinalitiesMin <- etrib.extremeCardinalities(etri, FALSE)
+extremeCardinalitiesMin
+
+
